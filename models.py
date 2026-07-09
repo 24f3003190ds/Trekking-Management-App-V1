@@ -45,7 +45,7 @@ class Staff(db.Model):
     contact = db.Column(db.String(100), nullable=True)
     is_approved = db.Column(db.Boolean, default=False)
     
-
+    user = db.relationship('User', backref='staff_profile')
     treks = db.relationship('Trek', backref='staff', lazy=True)
 
 class Booking(db.Model):

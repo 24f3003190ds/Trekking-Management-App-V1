@@ -34,31 +34,31 @@
 
                 {% if current_user.is_authenticated %}
 
-                    {% if current_user.role == 'admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    {% elif current_user.role == 'trek_staff' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('staff_dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('user_dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    {% endif %}
+                {% if current_user.role == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                {% elif current_user.role == 'trek_staff' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('staff_dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                {% endif %}
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
 
                 {% else %}
                 <li class="nav-item">
@@ -97,7 +97,7 @@
         </div>
     </footer>
 
-    
+
 
 </body>
 

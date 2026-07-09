@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        {% include "admin_sidebar.html" %}
+
+        <div class="col-md-9 col-lg-10">
+            <h2 class="page-heading mb-4">Dashboard</h2>
+
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-center p-3">
+                        <div class="text-muted">Total Treks</div>
+                        <div class="fs-3 fw-bold">{{ total_treks }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-center p-3">
+                        <div class="text-muted">Total Users</div>
+                        <div class="fs-3 fw-bold">{{ total_users }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-center p-3">
+                        <div class="text-muted">Total Staff</div>
+                        <div class="fs-3 fw-bold">{{ total_staff }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-center p-3">
+                        <div class="text-muted">Total Bookings</div>
+                        <div class="fs-3 fw-bold">{{ total_bookings }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="page-heading mb-3">All Bookings</h4>
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Trek</th>
+                        <th>Booking Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in all_bookings %}
+                    <tr>
+                        <td>{{ booking.id }}</td>
+                        <td>{{ booking.user.username }}</td>
+                        <td>{{ booking.trek.name }}</td>
+                        <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ booking.status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">No bookings yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
