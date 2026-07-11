@@ -24,7 +24,7 @@ with app.app_context():
         admin = User(
             username='admin',
             email='admin@ruyahorizons.com',
-            password=generate_password_hash('admin123'),
+            password=generate_password_hash('admin@12345'),
             role='admin'
         )
         db.session.add(admin)
@@ -77,15 +77,16 @@ def register():
         db.session.commit()
 
         if role == 'trek_staff':
-            new_staff = Staff(user_id=new_user.id, is_approved=False)
+            new_staff = Staff(user_id=new_user.id, status='pending')
             db.session.add(new_staff)
-            db.session.commit()
+            db.session.commit()    
 
         return redirect(url_for('login'))
 
     return render_template('register.html')
 
 # ===== Login =====
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -100,10 +101,13 @@ def login():
 
         if user.role == 'trek_staff':
             staff_profile = Staff.query.filter_by(user_id=user.id).first()
-            if not staff_profile or not staff_profile.is_approved:
+            if not staff_profile or staff_profile.status == 'pending':
                 return render_template('login.html', error="Your account is pending admin approval", email=email)
+            elif staff_profile.status == 'blacklisted':
+                return render_template('login.html', error="Your account has been blacklisted by the admin. Contact support for assistance.", email=email)
 
-        login_user(user)
+        if not login_user(user):
+            return render_template('login.html', error="Your account has been deactivated by the admin.", email=email)
 
         if user.role == 'admin':
             return redirect(url_for('admin_dashboard'))
@@ -150,13 +154,14 @@ def admin_treks():
         return "Access denied: Admins only", 403
 
     search_query = request.args.get('q', '')
+    error = request.args.get('error', '')
+
     if search_query:
         treks = Trek.query.filter(Trek.name.ilike(f'%{search_query}%')).all()
     else:
         treks = Trek.query.all()
 
-    return render_template('admin_manage_treks.html', treks=treks, search_query=search_query)
-
+    return render_template('admin_manage_treks.html', treks=treks, search_query=search_query, error=error)
 
 @app.route('/admin/treks/delete/<int:trek_id>')
 @login_required
@@ -165,6 +170,11 @@ def admin_delete_trek(trek_id):
         return "Access denied: Admins only", 403
 
     trek = Trek.query.get_or_404(trek_id)
+
+    existing_booking = Booking.query.filter_by(trek_id=trek.id).first()
+    if existing_booking:
+        return redirect(url_for('admin_treks', error='Cannot delete this trek — it has existing bookings.'))
+
     db.session.delete(trek)
     db.session.commit()
     return redirect(url_for('admin_treks'))
@@ -176,7 +186,7 @@ def admin_add_trek():
     if current_user.role != 'admin':
         return "Access denied: Admins only", 403
 
-    approved_staff = Staff.query.filter_by(is_approved=True).all()
+    approved_staff = Staff.query.filter_by(status='approved').all()
 
     if request.method == 'POST':
         name = request.form.get('name')
@@ -220,7 +230,7 @@ def admin_edit_trek(trek_id):
         return "Access denied: Admins only", 403
 
     trek = Trek.query.get_or_404(trek_id)
-    approved_staff = Staff.query.filter_by(is_approved=True).all()
+    approved_staff = Staff.query.filter_by(status='approved').all()
 
     if request.method == 'POST':
         trek.name = request.form.get('name')
@@ -265,7 +275,7 @@ def admin_approve_staff(staff_id):
         return "Access denied: Admins only", 403
 
     staff = Staff.query.get_or_404(staff_id)
-    staff.is_approved = True
+    staff.status = 'approved'
     db.session.commit()
     return redirect(url_for('admin_staff'))
 
@@ -277,7 +287,7 @@ def admin_blacklist_staff(staff_id):
         return "Access denied: Admins only", 403
 
     staff = Staff.query.get_or_404(staff_id)
-    staff.is_approved = False
+    staff.status = 'blacklisted'
     db.session.commit()
     return redirect(url_for('admin_staff'))
 
@@ -319,6 +329,17 @@ def admin_activate_user(user_id):
     user.is_active = True
     db.session.commit()
     return redirect(url_for('admin_users'))
+
+@app.route('/admin/history')
+@login_required
+def admin_trekking_history():
+    if current_user.role != 'admin':
+        return "Access denied: Admins only", 403
+
+    completed_bookings = Booking.query.filter_by(status='Completed') \
+                                       .order_by(Booking.booking_date.desc()).all()
+
+    return render_template('admin_trekking_history.html', completed_bookings=completed_bookings)
 
 
 # ===== Staff Dashboard =====
@@ -367,11 +388,16 @@ def staff_update_trek(trek_id):
     if request.method == 'POST':
         trek.available_slots = int(request.form.get('available_slots'))
         trek.status = request.form.get('status')
+
+        if trek.status == 'Completed':
+            active_bookings = Booking.query.filter_by(trek_id=trek.id, status='Booked').all()
+            for booking in active_bookings:
+                booking.status = 'Completed'
+
         db.session.commit()
         return redirect(url_for('staff_dashboard'))
 
     return render_template('staff_manage_trek_form.html', trek=trek)
-
 
 # ===== Staff: Participants =====
 
@@ -538,7 +564,7 @@ def user_profile():
             current_user.username = username
             current_user.email = email
             db.session.commit()
-            return redirect(url_for('user_profile'))
+            return redirect(url_for('user_dashboard'))
 
     return render_template('user_profile.html', error=error)
 

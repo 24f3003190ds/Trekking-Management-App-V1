@@ -11,6 +11,10 @@
                 <a href="{{ url_for('admin_add_trek') }}" class="btn btn-primary">Add New Trek</a>
             </div>
 
+            {% if error %}
+                <div class="auth-error">{{ error }}</div>
+            {% endif %}
+            
             <form method="GET" action="{{ url_for('admin_treks') }}" class="mb-4">
                 <div class="input-group" style="max-width: 400px;">
                     <input type="text" name="q" class="form-control" placeholder="Search treks by name"

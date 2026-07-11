@@ -11,7 +11,7 @@
             <form method="GET" action="{{ url_for('admin_staff') }}" class="mb-3">
                 <div class="input-group" style="max-width: 400px;">
                     <input type="text" name="q" class="form-control" placeholder="Search staff by name"
-                           value="{{ search_query or '' }}">
+                        value="{{ search_query or '' }}">
                     <button type="submit" class="btn btn-outline-primary">Search</button>
                 </div>
             </form>
@@ -35,25 +35,28 @@
                         <td>{{ staff.user.email }}</td>
                         <td>{{ staff.contact or '-' }}</td>
                         <td>
-                            {% if staff.is_approved %}
-                                Approved
+                            {% if staff.status == 'approved' %}
+                            <span class="text-success">Approved</span>
+                            {% elif staff.status == 'blacklisted' %}
+                            <span class="text-danger">Blacklisted</span>
                             {% else %}
-                                Pending
+                            <span>Pending</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if not staff.is_approved %}
-                            <a href="{{ url_for('admin_approve_staff', staff_id=staff.id) }}"
-                               class="btn btn-sm btn-success">Approve</a>
-                            {% else %}
+                            {% if staff.status == 'approved' %}
                             <a href="{{ url_for('admin_blacklist_staff', staff_id=staff.id) }}"
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('Blacklist this staff member?');">Blacklist</a>
+                                class="btn btn-sm btn-danger">Blacklist</a>
+                            {% else %}
+                            <a href="{{ url_for('admin_approve_staff', staff_id=staff.id) }}"
+                                class="btn btn-sm btn-success">Approve</a>
                             {% endif %}
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted">No staff found.</td></tr>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No staff found.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>

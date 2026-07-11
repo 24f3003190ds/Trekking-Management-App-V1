@@ -43,10 +43,10 @@ class Staff(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     contact = db.Column(db.String(100), nullable=True)
-    is_approved = db.Column(db.Boolean, default=False)
-    
+    status = db.Column(db.String(20), default='pending')  # pending, approved, blacklisted
+
     user = db.relationship('User', backref='staff_profile')
-    treks = db.relationship('Trek', backref='staff', lazy=True)
+    treks = db.relationship('Trek', backref='staff', lazy=True)    
 
 class Booking(db.Model):
     __tablename__ = 'booking'
