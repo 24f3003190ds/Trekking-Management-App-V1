@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My Bookings - Ru'ya Horizons{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        {% include "user_sidebar.html" %}
+
+        <div class="col-md-9 col-lg-10">
+            <h2 class="page-heading">My Bookings</h2>
+
+            {% if bookings %}
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>Trek Name</th>
+                        <th>Booking Date</th>
+                        <th>Trek Dates</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.trek.name }}</td>
+                        <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ booking.trek.start_date.strftime('%d %b %Y') }} - {{ booking.trek.end_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ booking.status }}</td>
+                        <td>
+                            <a href="{{ url_for('user_trek_details', trek_id=booking.trek.id) }}"
+                               class="btn btn-sm btn-outline-primary">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="mt-3">You haven't booked any treks yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

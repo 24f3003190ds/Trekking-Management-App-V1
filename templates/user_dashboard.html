@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Ru'ya Horizons{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        {% include "user_sidebar.html" %}
+
+        <div class="col-md-9 col-lg-10">
+            <h2 class="page-heading">Welcome, {{ current_user.username }}!</h2>
+
+            <h4 class="mt-4">Available Treks</h4>
+
+            <form method="GET" class="row g-2 align-items-end mt-2 mb-3">
+                <div class="col-auto">
+                    <label class="form-label">Difficulty</label>
+                    <select name="difficulty" class="form-select">
+                        <option value="">All</option>
+                        <option value="Easy" {% if selected_difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                        <option value="Moderate" {% if selected_difficulty == 'Moderate' %}selected{% endif %}>Moderate</option>
+                        <option value="Hard" {% if selected_difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <label class="form-label">Location</label>
+                    <select name="location" class="form-select">
+                        <option value="">All</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc }}" {% if selected_location == loc %}selected{% endif %}>{{ loc }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline-primary">Reset</a>
+                </div>
+            </form>
+
+            {% if available_treks %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Trek Name</th>
+                        <th>Location</th>
+                        <th>Difficulty</th>
+                        <th>Duration</th>
+                        <th>Available Slots</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trek in available_treks %}
+                    <tr>
+                        <td>{{ trek.name }}</td>
+                        <td>{{ trek.location }}</td>
+                        <td>{{ trek.difficulty }}</td>
+                        <td>{{ trek.duration }} days</td>
+                        <td>{{ trek.available_slots }}</td>
+                        <td>
+                            <a href="{{ url_for('user_trek_details', trek_id=trek.id) }}"
+                               class="btn btn-sm btn-primary">View / Book</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No treks match your search right now.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

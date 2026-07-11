@@ -407,12 +407,140 @@ def staff_profile():
     return render_template('staff_profile.html', staff_profile=staff_profile)
 
 
+# ===== User Dashboard =====
+
 @app.route('/user/dashboard')
 @login_required
 def user_dashboard():
     if current_user.role != 'trekker':
         return "Access denied: Trekkers only", 403
-    return "Trekker dashboard coming soon"
+
+    difficulty_filter = request.args.get('difficulty', '')
+    location_filter = request.args.get('location', '')
+
+    treks_query = Trek.query.filter_by(status='Open')
+
+    if difficulty_filter:
+        treks_query = treks_query.filter_by(difficulty=difficulty_filter)
+    if location_filter:
+        treks_query = treks_query.filter_by(location=location_filter)
+
+    available_treks = treks_query.all()
+
+    all_locations = db.session.query(Trek.location).distinct().all()
+    locations = [loc[0] for loc in all_locations]
+
+    return render_template('user_dashboard.html',
+                            available_treks=available_treks,
+                            locations=locations,
+                            selected_difficulty=difficulty_filter,
+                            selected_location=location_filter)
+
+
+# ===== User: Trek Details & Booking =====
+
+@app.route('/user/treks/<int:trek_id>', methods=['GET', 'POST'])
+@login_required
+def user_trek_details(trek_id):
+    if current_user.role != 'trekker':
+        return "Access denied: Trekkers only", 403
+
+    trek = Trek.query.get_or_404(trek_id)
+
+    existing_booking = Booking.query.filter_by(
+        user_id=current_user.id,
+        trek_id=trek.id
+    ).filter(Booking.status != 'Cancelled').first()
+
+    error = None
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'book':
+            if existing_booking:
+                error = "You have already booked this trek."
+            elif trek.status != 'Open':
+                error = "This trek is not open for booking."
+            elif trek.available_slots <= 0:
+                error = "No slots available for this trek."
+            else:
+                new_booking = Booking(
+                    user_id=current_user.id,
+                    trek_id=trek.id,
+                    status='Booked'
+                )
+                trek.available_slots -= 1
+                db.session.add(new_booking)
+                db.session.commit()
+                return redirect(url_for('user_my_bookings'))
+
+        elif action == 'cancel' and existing_booking:
+            existing_booking.status = 'Cancelled'
+            trek.available_slots += 1
+            db.session.commit()
+            return redirect(url_for('user_my_bookings'))
+
+    return render_template('user_trek_details.html',
+                            trek=trek,
+                            existing_booking=existing_booking,
+                            error=error)
+
+
+# ===== User: My Bookings =====
+
+@app.route('/user/bookings')
+@login_required
+def user_my_bookings():
+    if current_user.role != 'trekker':
+        return "Access denied: Trekkers only", 403
+
+    bookings = Booking.query.filter_by(user_id=current_user.id) \
+                             .order_by(Booking.booking_date.desc()).all()
+
+    return render_template('user_my_bookings.html', bookings=bookings)
+
+
+# ===== User: Trekking History =====
+
+@app.route('/user/history')
+@login_required
+def user_trekking_history():
+    if current_user.role != 'trekker':
+        return "Access denied: Trekkers only", 403
+
+    completed_bookings = Booking.query.filter_by(
+        user_id=current_user.id,
+        status='Completed'
+    ).order_by(Booking.booking_date.desc()).all()
+
+    return render_template('user_trekking_history.html', completed_bookings=completed_bookings)
+
+
+# ===== User: Profile =====
+
+@app.route('/user/profile', methods=['GET', 'POST'])
+@login_required
+def user_profile():
+    if current_user.role != 'trekker':
+        return "Access denied: Trekkers only", 403
+
+    error = None
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+
+        existing = User.query.filter(User.email == email, User.id != current_user.id).first()
+        if existing:
+            error = "Email already in use by another account."
+        else:
+            current_user.username = username
+            current_user.email = email
+            db.session.commit()
+            return redirect(url_for('user_profile'))
+
+    return render_template('user_profile.html', error=error)
 
 # ===== Run App =====
 
