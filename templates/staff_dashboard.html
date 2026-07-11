@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Staff Dashboard - Ru'ya Horizons{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        {% include "staff_sidebar.html" %}
+
+        <div class="col-md-9 col-lg-10">
+            <h2 class="page-heading">My Dashboard</h2>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center p-3">
+                        <div class="text-muted">Assigned Treks</div>
+                        <div class="fs-3 fw-bold">{{ assigned_treks_count  }}</div>                        
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center p-3">
+                        <div class="text-muted ">Total Participants</div>
+                        <div class="fs-3 fw-bold">{{ total_participants }}</div>                        
+                    </div>                    
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center p-3">
+                        <div class="text-muted">Open Treks</div>
+                        <div class="fs-3 fw-bold">{{ open_treks_count }}</div>                            
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="page-heading mb-3">My Assigned Treks</h4>
+            {% if trek_data %}
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>Trek Name</th>
+                        <th>Location</th>
+                        <th>Participants</th>
+                        <th>Difficulty</th>
+                        <th>Duration</th>
+                        <th>Slots</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in trek_data %}
+                    <tr>
+                        <td>{{ item.trek.name }}</td>
+                        <td>{{ item.trek.location }}</td>
+                        <td>{{ item.participant_count }}</td>
+                        <td>{{ item.trek.difficulty }}</td>
+                        <td>{{ item.trek.duration }} days</td>
+                        <td>{{ item.trek.available_slots }} / {{ item.trek.total_slots }}</td>
+                        <td>{{ item.trek.status }}</td>
+                        <td>
+                            <a href="{{ url_for('staff_update_trek', trek_id=item.trek.id) }}"
+                               class="btn btn-sm btn-primary">Manage</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="mt-3">No treks have been assigned to you yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

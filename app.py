@@ -321,12 +321,91 @@ def admin_activate_user(user_id):
     return redirect(url_for('admin_users'))
 
 
+# ===== Staff Dashboard =====
+
 @app.route('/staff/dashboard')
 @login_required
 def staff_dashboard():
     if current_user.role != 'trek_staff':
         return "Access denied: Trek Staff only", 403
-    return "Staff dashboard coming soon"
+
+    staff_profile = Staff.query.filter_by(user_id=current_user.id).first()
+
+    assigned_treks = Trek.query.filter_by(assigned_staff_id=staff_profile.id).all()
+
+    trek_data = []
+    total_participants = 0
+    open_treks_count = 0
+
+    for trek in assigned_treks:
+        participant_count = Booking.query.filter_by(trek_id=trek.id).count()
+        trek_data.append({'trek': trek, 'participant_count': participant_count})
+        total_participants += participant_count
+        if trek.status == 'Open':
+            open_treks_count += 1
+
+    return render_template('staff_dashboard.html',
+                            trek_data=trek_data,
+                            assigned_treks_count=len(assigned_treks),
+                            total_participants=total_participants,
+                            open_treks_count=open_treks_count)
+
+# ===== Staff: Manage Trek Slots/Status =====
+
+@app.route('/staff/treks/<int:trek_id>/update', methods=['GET', 'POST'])
+@login_required
+def staff_update_trek(trek_id):
+    if current_user.role != 'trek_staff':
+        return "Access denied: Trek Staff only", 403
+
+    staff_profile = Staff.query.filter_by(user_id=current_user.id).first()
+    trek = Trek.query.get_or_404(trek_id)
+
+    if trek.assigned_staff_id != staff_profile.id:
+        return "Access denied: This trek is not assigned to you", 403
+
+    if request.method == 'POST':
+        trek.available_slots = int(request.form.get('available_slots'))
+        trek.status = request.form.get('status')
+        db.session.commit()
+        return redirect(url_for('staff_dashboard'))
+
+    return render_template('staff_manage_trek_form.html', trek=trek)
+
+
+# ===== Staff: Participants =====
+
+@app.route('/staff/participants')
+@login_required
+def staff_participants():
+    if current_user.role != 'trek_staff':
+        return "Access denied: Trek Staff only", 403
+
+    staff_profile = Staff.query.filter_by(user_id=current_user.id).first()
+    assigned_treks = Trek.query.filter_by(assigned_staff_id=staff_profile.id).all()
+
+    trek_ids = [trek.id for trek in assigned_treks]
+    bookings = Booking.query.filter(Booking.trek_id.in_(trek_ids)).all()
+
+    return render_template('staff_participants.html', bookings=bookings)
+
+# ===== Staff: Profile =====
+
+@app.route('/staff/profile', methods=['GET', 'POST'])
+@login_required
+def staff_profile():
+    if current_user.role != 'trek_staff':
+        return "Access denied: Trek Staff only", 403
+
+    staff_profile = Staff.query.filter_by(user_id=current_user.id).first()
+
+    if request.method == 'POST':
+        staff_profile.contact = request.form.get('contact')
+        db.session.commit()
+        return redirect(url_for('staff_dashboard'))
+
+    return render_template('staff_profile.html', staff_profile=staff_profile)
+
 
 @app.route('/user/dashboard')
 @login_required

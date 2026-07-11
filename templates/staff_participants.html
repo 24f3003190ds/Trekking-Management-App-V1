@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Participants - Ru'ya Horizons{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        {% include "staff_sidebar.html" %}
+
+        <div class="col-md-9 col-lg-10">
+            <h2 class="page-heading">Participants</h2>
+
+            {% if bookings %}
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>Trekker Name</th>
+                        <th>Email</th>
+                        <th>Trek Name</th>
+                        <th>Booking Date</th>
+                        <th>Booking Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.user.username }}</td>
+                        <td>{{ booking.user.email }}</td>
+                        <td>{{ booking.trek.name }}</td>
+                        <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ booking.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="mt-3">No participants have booked your treks yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
