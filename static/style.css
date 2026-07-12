@@ -88,7 +88,10 @@ a:hover {
 
 /* ---------- Hero Section ---------- */
 .hero-section {
-    background-color: #02556f;
+    background-image: linear-gradient(rgba(2, 85, 111, 0.4), rgba(2, 85, 111, 0.4)),
+                       url("./images/hero-mountain.png");
+    background-size: cover;
+    background-position: center bottom;
     color: #ffffff;
     padding: 100px 0 80px;
     text-align: center;
