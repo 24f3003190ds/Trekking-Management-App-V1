@@ -6,16 +6,15 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tma.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'trek_secret_key'
 
-# Initialize database
+
 from models import db, User, Staff, Trek, Booking
 db.init_app(app)
 
-# ===== Create tables and seed admin (runs once at startup) =====
+# it creates tables and seed admin
 with app.app_context():
     db.create_all()
 
@@ -33,7 +32,6 @@ with app.app_context():
     else:
         print("Admin already exists.")
 
-# ===== Flask-Login Setup =====
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
@@ -41,13 +39,11 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ===== Routes =====
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ===== Register =====
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -85,7 +81,6 @@ def register():
 
     return render_template('register.html')
 
-# ===== Login =====
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -118,7 +113,6 @@ def login():
 
     return render_template('login.html')
 
-# ===== Logout =====
 
 @app.route('/logout')
 @login_required
@@ -126,7 +120,6 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-# ===== Placeholder Dashboards (role-restricted) =====
 
 @app.route('/admin/dashboard')
 @login_required
@@ -162,6 +155,7 @@ def admin_treks():
         treks = Trek.query.all()
 
     return render_template('admin_manage_treks.html', treks=treks, search_query=search_query, error=error)
+
 
 @app.route('/admin/treks/delete/<int:trek_id>')
 @login_required
@@ -330,6 +324,7 @@ def admin_activate_user(user_id):
     db.session.commit()
     return redirect(url_for('admin_users'))
 
+
 @app.route('/admin/history')
 @login_required
 def admin_trekking_history():
@@ -342,7 +337,6 @@ def admin_trekking_history():
     return render_template('admin_trekking_history.html', completed_bookings=completed_bookings)
 
 
-# ===== Staff Dashboard =====
 
 @app.route('/staff/dashboard')
 @login_required
@@ -371,7 +365,7 @@ def staff_dashboard():
                             total_participants=total_participants,
                             open_treks_count=open_treks_count)
 
-# ===== Staff: Manage Trek Slots/Status =====
+# Manage Trek Slots and Status 
 
 @app.route('/staff/treks/<int:trek_id>/update', methods=['GET', 'POST'])
 @login_required
@@ -399,7 +393,6 @@ def staff_update_trek(trek_id):
 
     return render_template('staff_manage_trek_form.html', trek=trek)
 
-# ===== Staff: Participants =====
 
 @app.route('/staff/participants')
 @login_required
@@ -415,7 +408,6 @@ def staff_participants():
 
     return render_template('staff_participants.html', bookings=bookings)
 
-# ===== Staff: Profile =====
 
 @app.route('/staff/profile', methods=['GET', 'POST'])
 @login_required
@@ -432,8 +424,6 @@ def staff_profile():
 
     return render_template('staff_profile.html', staff_profile=staff_profile)
 
-
-# ===== User Dashboard =====
 
 @app.route('/user/dashboard')
 @login_required
@@ -463,7 +453,7 @@ def user_dashboard():
                             selected_location=location_filter)
 
 
-# ===== User: Trek Details & Booking =====
+# Trek Details & Booking 
 
 @app.route('/user/treks/<int:trek_id>', methods=['GET', 'POST'])
 @login_required
@@ -513,7 +503,6 @@ def user_trek_details(trek_id):
                             error=error)
 
 
-# ===== User: My Bookings =====
 
 @app.route('/user/bookings')
 @login_required
@@ -526,8 +515,6 @@ def user_my_bookings():
 
     return render_template('user_my_bookings.html', bookings=bookings)
 
-
-# ===== User: Trekking History =====
 
 @app.route('/user/history')
 @login_required
@@ -542,8 +529,6 @@ def user_trekking_history():
 
     return render_template('user_trekking_history.html', completed_bookings=completed_bookings)
 
-
-# ===== User: Profile =====
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -568,7 +553,6 @@ def user_profile():
 
     return render_template('user_profile.html', error=error)
 
-# ===== Run App =====
 
 if __name__ == '__main__':
     app.run(debug=True)
